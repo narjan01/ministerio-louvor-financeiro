@@ -12,7 +12,8 @@ import {
   ShieldCheck, 
   Code2, 
   RefreshCw,
-  FolderGit2
+  FolderGit2,
+  Server
 } from 'lucide-react';
 
 export const GitHubTab: React.FC = () => {
@@ -92,17 +93,20 @@ export const GitHubTab: React.FC = () => {
             </div>
             <div>
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                Integração GitHub & Hospedagem Cloudflare
+                Integrações: GitHub, Umbler & Cloudflare
               </h2>
               <p className="text-xs text-zinc-400 mt-1">
-                Repositório preparado com TypeScript, Cloudflare Functions, Supabase e automação CI/CD.
+                Repositório conectado ao GitHub, credenciais da Umbler verificadas e hospedagem pronta.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold border border-emerald-500/30">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Git Inicializado
+              <CheckCircle2 className="w-3.5 h-3.5" /> GitHub Sincronizado
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-sky-500/10 text-sky-400 text-xs font-semibold border border-sky-500/30">
+              <Server className="w-3.5 h-3.5" /> Umbler API Conectada
             </span>
           </div>
         </div>
@@ -170,6 +174,40 @@ export const GitHubTab: React.FC = () => {
               <span>
                 <strong>Segurança Garantida:</strong> Os arquivos <code className="text-white">.env</code> e dados sensíveis já estão protegidos no <code className="text-white">.gitignore</code>.
               </span>
+            </div>
+          </div>
+
+          {/* Card Umbler API */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <Server className="w-4 h-4 text-sky-400" />
+                Umbler Cloud API (Conectada)
+              </h3>
+              <span className="px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 text-[11px] font-semibold border border-sky-500/30">
+                Ativo
+              </span>
+            </div>
+
+            <div className="space-y-2 text-xs text-zinc-400">
+              <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800/80 space-y-1.5 font-mono text-[11px]">
+                <div className="flex justify-between text-zinc-300">
+                  <span className="text-zinc-500">User ID:</span>
+                  <span className="text-sky-300">6abab36cca3d4536ae8b4b6e</span>
+                </div>
+                <div className="flex justify-between text-zinc-300">
+                  <span className="text-zinc-500">API Status:</span>
+                  <span className="text-emerald-400">200 OK (Basic Auth)</span>
+                </div>
+                <div className="flex justify-between text-zinc-300">
+                  <span className="text-zinc-500">Domínio Vinculado:</span>
+                  <span className="text-zinc-200">lunocadoceria.com.br</span>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-zinc-400">
+                Se você deseja apontar seu domínio personalizado (DNS) na Umbler para a hospedagem do aplicativo, crie uma entrada <strong>CNAME</strong> apontando para o seu subdomínio do Cloudflare Pages.
+              </p>
             </div>
           </div>
 
