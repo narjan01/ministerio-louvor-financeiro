@@ -17,21 +17,26 @@ import {
 
 export const GitHubTab: React.FC = () => {
   const [copiedCmd, setCopiedCmd] = useState<string | null>(null);
-  const [repoUrl, setRepoUrl] = useState<string>('https://github.com/SEU-USUARIO/ministerio-louvor-financeiro.git');
+  const [repoUrl, setRepoUrl] = useState<string>('https://github.com/narjan01/ministerio-louvor-financeiro.git');
+  const [githubToken, setGithubToken] = useState<string>('');
   const [supabaseUrlInput, setSupabaseUrlInput] = useState(getSupabaseConfig().url);
   const [supabaseKeyInput, setSupabaseKeyInput] = useState(getSupabaseConfig().anonKey);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
   const [showSql, setShowSql] = useState(false);
 
+  const tokenUrl = githubToken
+    ? `https://${githubToken}@github.com/narjan01/ministerio-louvor-financeiro.git`
+    : repoUrl;
+
   const gitCommands = [
-    `# 1. Vincular este repositório ao seu GitHub:`,
-    `git remote add origin ${repoUrl || 'https://github.com/SEU-USUARIO/ministerio-louvor-financeiro.git'}`,
-    ``,
-    `# 2. Garantir que a branch principal se chama main:`,
-    `git branch -M main`,
-    ``,
-    `# 3. Subir todos os arquivos e histórico para o seu GitHub:`,
+    `# 1. Enviar diretamente para seu repositório:`,
+    `git push -u origin main`
+  ].join('\n');
+
+  const gitTokenCommands = [
+    `# Push autenticado com Token de Acesso Pessoal (PAT):`,
+    `git remote set-url origin ${tokenUrl}`,
     `git push -u origin main`
   ].join('\n');
 
@@ -110,36 +115,54 @@ export const GitHubTab: React.FC = () => {
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
                 <Terminal className="w-4 h-4 text-purple-400" />
-                Como Enviar para o seu Repositório GitHub
+                Repositório Vinculado: narjan01/ministerio-louvor-financeiro
               </h3>
               <button
                 onClick={() => handleCopy(gitCommands, 'git-all')}
                 className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs flex items-center gap-1.5 transition border border-zinc-700"
               >
                 {copiedCmd === 'git-all' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                {copiedCmd === 'git-all' ? 'Copiado!' : 'Copiar Comandos'}
+                {copiedCmd === 'git-all' ? 'Copiado!' : 'Copiar Comando Push'}
               </button>
             </div>
 
-            <ol className="text-xs text-zinc-400 space-y-1.5 list-decimal list-inside">
-              <li>Crie um repositório vazio no seu <a href="https://github.com/new" target="_blank" rel="noreferrer" className="text-purple-400 hover:underline">GitHub</a> com o nome <code className="text-zinc-200 bg-zinc-950 px-1 py-0.5 rounded">ministerio-louvor-financeiro</code>.</li>
-              <li>Cole a URL do seu repositório no campo abaixo para gerar os comandos exatos:</li>
-            </ol>
-
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="https://github.com/seu-usuario/seu-repositorio.git"
-                value={repoUrl}
-                onChange={(e) => setRepoUrl(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 text-purple-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-purple-500 font-mono"
-              />
-            </div>
+            <p className="text-xs text-zinc-400">
+              O repositório remoto já está configurado como <code className="text-purple-300 font-mono">https://github.com/narjan01/ministerio-louvor-financeiro.git</code>.
+            </p>
 
             <div className="relative">
               <pre className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono text-zinc-300 overflow-x-auto leading-relaxed">
-                {gitCommands}
+{gitCommands}
               </pre>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2">
+              <span className="text-xs font-semibold text-zinc-300 block">
+                💡 Se for solicitada autenticação (Personal Access Token):
+              </span>
+              <p className="text-[11px] text-zinc-400">
+                Se você usa autenticação por token pessoal, cole seu token abaixo para gerar a linha pronta de push:
+              </p>
+              <input
+                type="password"
+                placeholder="Cole seu GitHub Personal Access Token (ghp_...)"
+                value={githubToken}
+                onChange={(e) => setGithubToken(e.target.value)}
+                className="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-xl px-3 py-1.5 text-xs font-mono focus:outline-none focus:border-purple-500"
+              />
+              {githubToken && (
+                <div className="pt-1">
+                  <pre className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-mono text-emerald-400 overflow-x-auto">
+{gitTokenCommands}
+                  </pre>
+                  <button
+                    onClick={() => handleCopy(gitTokenCommands, 'git-pat')}
+                    className="mt-2 px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition"
+                  >
+                    {copiedCmd === 'git-pat' ? 'Copiado!' : 'Copiar Linha Autenticada'}
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-300 flex items-start gap-2">
