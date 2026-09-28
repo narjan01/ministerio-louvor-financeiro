@@ -182,9 +182,9 @@ export const GitHubTab: React.FC = () => {
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
                 <Server className="w-4 h-4 text-sky-400" />
-                Umbler Cloud API (Conectada)
+                DNS Umbler: Subdomínio Configurado
               </h3>
-              <span className="px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 text-[11px] font-semibold border border-sky-500/30">
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-semibold border border-emerald-500/30">
                 Ativo
               </span>
             </div>
@@ -192,21 +192,21 @@ export const GitHubTab: React.FC = () => {
             <div className="space-y-2 text-xs text-zinc-400">
               <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800/80 space-y-1.5 font-mono text-[11px]">
                 <div className="flex justify-between text-zinc-300">
-                  <span className="text-zinc-500">User ID:</span>
-                  <span className="text-sky-300">6abab36cca3d4536ae8b4b6e</span>
+                  <span className="text-zinc-500">Subdomínio Criado:</span>
+                  <span className="text-emerald-400 font-bold">louvor.novaliancaesperancajp.com.br</span>
                 </div>
                 <div className="flex justify-between text-zinc-300">
-                  <span className="text-zinc-500">API Status:</span>
-                  <span className="text-emerald-400">200 OK (Basic Auth)</span>
+                  <span className="text-zinc-500">Domínio Raiz:</span>
+                  <span className="text-zinc-200">novaliancaesperancajp.com.br</span>
                 </div>
                 <div className="flex justify-between text-zinc-300">
-                  <span className="text-zinc-500">Domínio Vinculado:</span>
-                  <span className="text-zinc-200">lunocadoceria.com.br</span>
+                  <span className="text-zinc-500">DNS Record ID:</span>
+                  <span className="text-sky-300">4656973 (Tipo A / CNAME)</span>
                 </div>
               </div>
 
               <p className="text-[11px] text-zinc-400">
-                Se você deseja apontar seu domínio personalizado (DNS) na Umbler para a hospedagem do aplicativo, crie uma entrada <strong>CNAME</strong> apontando para o seu subdomínio do Cloudflare Pages.
+                Ao publicar o projeto no <strong>Cloudflare Pages</strong>, se desejar vincular este endereço oficial, basta adicionar <code>louvor.novaliancaesperancajp.com.br</code> em <em>Custom Domains</em>.
               </p>
             </div>
           </div>
