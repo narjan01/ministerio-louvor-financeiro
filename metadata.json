@@ -1,0 +1,6 @@
+{
+  "name": "Portal Louvor - Controle Financeiro & Agenda",
+  "description": "Sistema completo de gestão financeira, mensalidades PIX, confraternização e escalas de louvor integrado com Supabase e Cloudflare Pages.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
