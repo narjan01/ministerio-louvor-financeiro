@@ -17,6 +17,7 @@ import {
 
 export const GitHubTab: React.FC = () => {
   const [copiedCmd, setCopiedCmd] = useState<string | null>(null);
+  const [repoUrl, setRepoUrl] = useState<string>('https://github.com/SEU-USUARIO/ministerio-louvor-financeiro.git');
   const [supabaseUrlInput, setSupabaseUrlInput] = useState(getSupabaseConfig().url);
   const [supabaseKeyInput, setSupabaseKeyInput] = useState(getSupabaseConfig().anonKey);
   const [testResult, setTestResult] = useState<string | null>(null);
@@ -24,13 +25,13 @@ export const GitHubTab: React.FC = () => {
   const [showSql, setShowSql] = useState(false);
 
   const gitCommands = [
-    `# 1. Adicione o seu repositório remoto do GitHub:`,
-    `git remote add origin https://github.com/SEU-USUARIO/ministerio-louvor-financeiro.git`,
+    `# 1. Vincular este repositório ao seu GitHub:`,
+    `git remote add origin ${repoUrl || 'https://github.com/SEU-USUARIO/ministerio-louvor-financeiro.git'}`,
     ``,
-    `# 2. Defina a branch principal como main:`,
+    `# 2. Garantir que a branch principal se chama main:`,
     `git branch -M main`,
     ``,
-    `# 3. Envie o código completo para o seu GitHub:`,
+    `# 3. Subir todos os arquivos e histórico para o seu GitHub:`,
     `git push -u origin main`
   ].join('\n');
 
@@ -122,8 +123,18 @@ export const GitHubTab: React.FC = () => {
 
             <ol className="text-xs text-zinc-400 space-y-1.5 list-decimal list-inside">
               <li>Crie um repositório vazio no seu <a href="https://github.com/new" target="_blank" rel="noreferrer" className="text-purple-400 hover:underline">GitHub</a> com o nome <code className="text-zinc-200 bg-zinc-950 px-1 py-0.5 rounded">ministerio-louvor-financeiro</code>.</li>
-              <li>Execute os comandos abaixo no seu terminal para conectar e fazer o push:</li>
+              <li>Cole a URL do seu repositório no campo abaixo para gerar os comandos exatos:</li>
             </ol>
+
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="https://github.com/seu-usuario/seu-repositorio.git"
+                value={repoUrl}
+                onChange={(e) => setRepoUrl(e.target.value)}
+                className="w-full bg-zinc-950 border border-zinc-800 text-purple-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-purple-500 font-mono"
+              />
+            </div>
 
             <div className="relative">
               <pre className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono text-zinc-300 overflow-x-auto leading-relaxed">
