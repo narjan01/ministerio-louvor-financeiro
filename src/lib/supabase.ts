@@ -1,13 +1,17 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Obtém valores do ambiente ou localStorage (para testes fáceis na UI)
-const getEnvOrStorage = (key: string, envVar: string | undefined): string => {
-  return localStorage.getItem(key) || envVar || '';
+// Chaves padrão do projeto fornecido
+export const DEFAULT_SUPABASE_URL = 'https://ocnojaerwfjpozvzwfxo.supabase.co';
+export const DEFAULT_SUPABASE_KEY = 'sb_publishable_3dhrzPtrb-23M419wijm-A_LbJX5wGP';
+
+// Obtém valores do ambiente ou localStorage (para testes fáceis na UI) ou default oficial
+const getEnvOrStorage = (key: string, envVar: string | undefined, defaultVal: string): string => {
+  return localStorage.getItem(key) || envVar || defaultVal;
 };
 
 export const getSupabaseConfig = () => {
-  const url = getEnvOrStorage('SUPABASE_CUSTOM_URL', import.meta.env.VITE_SUPABASE_URL);
-  const anonKey = getEnvOrStorage('SUPABASE_CUSTOM_KEY', import.meta.env.VITE_SUPABASE_ANON_KEY);
+  const url = getEnvOrStorage('SUPABASE_CUSTOM_URL', import.meta.env.VITE_SUPABASE_URL, DEFAULT_SUPABASE_URL);
+  const anonKey = getEnvOrStorage('SUPABASE_CUSTOM_KEY', import.meta.env.VITE_SUPABASE_ANON_KEY, DEFAULT_SUPABASE_KEY);
   return { url, anonKey, isConfigured: Boolean(url && anonKey) };
 };
 

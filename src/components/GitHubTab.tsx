@@ -63,15 +63,15 @@ export const GitHubTab: React.FC = () => {
         return;
       }
 
-      const res = await fetch(`${supabaseUrlInput.replace(/\/$/, '')}/rest/v1/`, {
+      const cleanUrl = supabaseUrlInput.replace(/\/$/, '');
+      const res = await fetch(`${cleanUrl}/auth/v1/health`, {
         headers: {
           apikey: supabaseKeyInput,
-          Authorization: `Bearer ${supabaseKeyInput}`,
         },
       });
 
       if (res.ok || res.status === 200) {
-        setTestResult('✅ Conexão bem-sucedida com o Supabase!');
+        setTestResult('✅ Conexão com o Supabase autenticada com sucesso! Chave válida.');
       } else {
         setTestResult(`⚠️ Resposta do Supabase: HTTP ${res.status}`);
       }
@@ -372,10 +372,10 @@ export const GitHubTab: React.FC = () => {
 
             <button
               onClick={() => {
-                fetch('/supabase/schema.sql')
+                fetch('/supabase-schema.sql')
                   .then(r => r.text())
                   .then(txt => handleCopy(txt, 'sql-schema'))
-                  .catch(() => handleCopy('-- Execute o arquivo supabase/schema.sql', 'sql-schema'));
+                  .catch(() => handleCopy('-- Execute o arquivo supabase-schema.sql', 'sql-schema'));
               }}
               className="w-full py-2.5 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 text-xs font-bold flex items-center justify-center gap-2 transition"
             >
