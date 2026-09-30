@@ -1,4 +1,4 @@
-import { Membro, Mensalidade, Transacao, EventoAgenda, ParticipanteConfra, ItemFrequencia } from '../types';
+import { Membro, Mensalidade, Transacao, EventoAgenda, ParticipanteConfra, ItemFrequencia, UsuarioAdmin } from '../types';
 import { 
   OFICIAL_MEMBROS, 
   OFICIAL_HISTORICO_MESES, 
@@ -7,6 +7,26 @@ import {
   OFICIAL_CONFRA, 
   OFICIAL_FREQUENCIAS_MATRIZ 
 } from './dadosOficiaisPlanilha';
+
+// Administradores Padrão do Sistema
+const DEFAULT_ADMINS: UsuarioAdmin[] = [
+  {
+    id: 'adm_1',
+    nome: 'Liderança de Louvor (Master)',
+    email: 'louvor@novaliancaesperancajp.com.br',
+    cargo: 'Líder Geral',
+    ativo: true,
+    criadoEm: '01/01/2026',
+  },
+  {
+    id: 'adm_2',
+    nome: 'Narjan Trugilho',
+    email: 'narjan.trugilho@gmail.com',
+    cargo: 'Administrador Financeiro',
+    ativo: true,
+    criadoEm: '15/01/2026',
+  },
+];
 
 // Versão de controle para forçar atualização do cache local
 const DATA_VERSION_KEY = 'louvor_data_version_v3';
@@ -152,10 +172,56 @@ export class DataStore {
     return nova;
   }
 
+  static updateTransacao(t: Transacao): void {
+    const key = `louvor_transacoes_${t.ano}_${t.mes}`;
+    const transacoes = this.getTransacoes(t.mes, t.ano);
+    const idx = transacoes.findIndex(item => item.id === t.id);
+    if (idx !== -1) {
+      transacoes[idx] = t;
+      localStorage.setItem(key, JSON.stringify(transacoes));
+    }
+  }
+
   static deleteTransacao(id: string, mes: number, ano: number = 2026) {
     const key = `louvor_transacoes_${ano}_${mes}`;
     const transacoes = this.getTransacoes(mes, ano).filter(t => t.id !== id);
     localStorage.setItem(key, JSON.stringify(transacoes));
+  }
+
+  // GERENCIAR USUÁRIOS ADMIN
+  static getAdmins(): UsuarioAdmin[] {
+    const data = localStorage.getItem('louvor_admins');
+    if (!data) {
+      localStorage.setItem('louvor_admins', JSON.stringify(DEFAULT_ADMINS));
+      return DEFAULT_ADMINS;
+    }
+    return JSON.parse(data);
+  }
+
+  static addAdmin(admin: Omit<UsuarioAdmin, 'id' | 'criadoEm'>): UsuarioAdmin {
+    const admins = this.getAdmins();
+    const novo: UsuarioAdmin = {
+      ...admin,
+      id: `adm_${Date.now()}`,
+      criadoEm: new Date().toLocaleDateString('pt-BR'),
+    };
+    admins.push(novo);
+    localStorage.setItem('louvor_admins', JSON.stringify(admins));
+    return novo;
+  }
+
+  static updateAdmin(admin: UsuarioAdmin): void {
+    const admins = this.getAdmins();
+    const idx = admins.findIndex(a => a.id === admin.id);
+    if (idx !== -1) {
+      admins[idx] = admin;
+      localStorage.setItem('louvor_admins', JSON.stringify(admins));
+    }
+  }
+
+  static deleteAdmin(id: string): void {
+    const admins = this.getAdmins().filter(a => a.id !== id);
+    localStorage.setItem('louvor_admins', JSON.stringify(admins));
   }
 
   // Retorna os dados oficiais do consolidado da planilha para aquele mês

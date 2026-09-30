@@ -62,6 +62,16 @@ export interface ParticipanteConfra {
   nov: StatusPagamento;
 }
 
+export interface UsuarioAdmin {
+  id: string;
+  nome: string;
+  email: string;
+  senha?: string;
+  cargo: string;
+  ativo: boolean;
+  criadoEm: string;
+}
+
 export interface PixInfo {
   payment_id: string;
   qr_code: string;

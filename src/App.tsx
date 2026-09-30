@@ -3,6 +3,7 @@ import { FinanceiroTab } from './components/FinanceiroTab';
 import { ConfraTab } from './components/ConfraTab';
 import { AgendaTab } from './components/AgendaTab';
 import { GitHubTab } from './components/GitHubTab';
+import { PortalAdminTab } from './components/PortalAdminTab';
 import { ChurchLandingPage } from './components/ChurchLandingPage';
 import { PixModal } from './components/PixModal';
 import { RelatorioModal } from './components/RelatorioModal';
@@ -18,12 +19,13 @@ import {
   Shield, 
   ShieldCheck, 
   ExternalLink,
-  Church
+  Church,
+  SlidersHorizontal
 } from 'lucide-react';
 
 export default function App() {
   const [viewMode, setViewMode] = useState<'church' | 'louvor'>('louvor');
-  const [activeTab, setActiveTab] = useState<'financeiro' | 'confra' | 'agenda' | 'github'>('financeiro');
+  const [activeTab, setActiveTab] = useState<'financeiro' | 'confra' | 'agenda' | 'admin' | 'github'>('financeiro');
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentPix, setCurrentPix] = useState<PixInfo | null>(null);
   const [relatorioModal, setRelatorioModal] = useState<{ open: boolean; title: string; conteudo: string }>({
@@ -93,15 +95,18 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setViewMode('church')}
+            <a
+              href="https://novaliancaesperancajp.com.br"
+              target="_blank"
+              rel="noopener noreferrer"
               className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 hover:text-white text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
-              title="Ver página de apresentação da igreja (novaliancaesperancajp.com.br)"
+              title="Acessar o site principal da igreja (novaliancaesperancajp.com.br)"
             >
               <Church className="w-3.5 h-3.5 text-purple-400" />
               <span className="hidden sm:inline">Página da Igreja</span>
               <span className="sm:hidden">Igreja</span>
-            </button>
+              <ExternalLink className="w-3 h-3 text-purple-400/80 ml-0.5" />
+            </a>
 
             {isAdmin ? (
               <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-bold">
@@ -167,6 +172,23 @@ export default function App() {
             </button>
 
             <button
+              onClick={() => setActiveTab('admin')}
+              className={`flex items-center gap-2 py-2 px-3.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+                activeTab === 'admin'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-950/40'
+                  : isAdmin
+                  ? 'text-indigo-400 hover:text-indigo-200 hover:bg-indigo-950/30 border border-indigo-500/30'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
+              }`}
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              Portal Admin
+              {isAdmin && (
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
+              )}
+            </button>
+
+            <button
               onClick={() => setActiveTab('github')}
               className={`flex items-center gap-2 py-2 px-3.5 rounded-xl text-xs font-bold transition whitespace-nowrap ml-auto ${
                 activeTab === 'github'
@@ -203,6 +225,13 @@ export default function App() {
           <AgendaTab
             isAdmin={isAdmin}
             onOpenRelatorio={openRelatorio}
+          />
+        )}
+
+        {activeTab === 'admin' && (
+          <PortalAdminTab
+            isAdmin={isAdmin}
+            onRequestLogin={() => setShowAdminModal(true)}
           />
         )}
 
