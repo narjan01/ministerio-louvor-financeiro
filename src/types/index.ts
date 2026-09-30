@@ -18,6 +18,7 @@ export interface Mensalidade {
   ano: number;
   status: StatusPagamento;
   valor: number;
+  payment_id?: string;
   data_pagamento?: string;
 }
 
@@ -42,6 +43,7 @@ export interface EventoAgenda {
   escalados?: string; // Nomes separados por vírgula
   gcal?: string;
   isApi?: boolean;
+  origem_id?: string; // Identificador da origem externa, como LouveApp
 }
 
 export interface ItemFrequencia {
@@ -70,6 +72,8 @@ export interface PixInfo {
   nome: string;
   descricao: string;
   mes?: number | number[];
+  ano?: number;
   tipo: 'mensal' | 'confra';
   membro_id?: string;
+  parcelas?: ('set' | 'out' | 'nov')[];
 }

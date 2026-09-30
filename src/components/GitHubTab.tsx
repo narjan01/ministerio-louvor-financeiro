@@ -1,17 +1,14 @@
 import React, { useState } from 'react';
-import { getSupabaseConfig, saveSupabaseConfig, resetSupabaseConfig } from '../lib/supabase';
+import { getSupabaseConfig, saveSupabaseConfig } from '../lib/supabase';
 import { 
-  GitBranch, 
   Terminal, 
   Database, 
   Cloud, 
   Copy, 
   Check, 
-  ExternalLink, 
   CheckCircle2, 
   ShieldCheck, 
   Code2, 
-  RefreshCw,
   FolderGit2,
   Server
 } from 'lucide-react';
@@ -96,7 +93,7 @@ export const GitHubTab: React.FC = () => {
                 Integrações: GitHub, Umbler & Cloudflare
               </h2>
               <p className="text-xs text-zinc-400 mt-1">
-                Repositório conectado ao GitHub, credenciais da Umbler verificadas e hospedagem pronta.
+                Instruções de publicação e configuração do Supabase. As conexões externas devem ser verificadas no provedor.
               </p>
             </div>
           </div>
@@ -138,35 +135,6 @@ export const GitHubTab: React.FC = () => {
               <pre className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 text-xs font-mono text-zinc-300 overflow-x-auto leading-relaxed">
 {gitCommands}
               </pre>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2">
-              <span className="text-xs font-semibold text-zinc-300 block">
-                💡 Se for solicitada autenticação (Personal Access Token):
-              </span>
-              <p className="text-[11px] text-zinc-400">
-                Se você usa autenticação por token pessoal, cole seu token abaixo para gerar a linha pronta de push:
-              </p>
-              <input
-                type="password"
-                placeholder="Cole seu GitHub Personal Access Token (ghp_...)"
-                value={githubToken}
-                onChange={(e) => setGithubToken(e.target.value)}
-                className="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-xl px-3 py-1.5 text-xs font-mono focus:outline-none focus:border-purple-500"
-              />
-              {githubToken && (
-                <div className="pt-1">
-                  <pre className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-mono text-emerald-400 overflow-x-auto">
-{gitTokenCommands}
-                  </pre>
-                  <button
-                    onClick={() => handleCopy(gitTokenCommands, 'git-pat')}
-                    className="mt-2 px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition"
-                  >
-                    {copiedCmd === 'git-pat' ? 'Copiado!' : 'Copiar Linha Autenticada'}
-                  </button>
-                </div>
-              )}
             </div>
 
             <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-300 flex items-start gap-2">

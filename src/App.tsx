@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FinanceiroTab } from './components/FinanceiroTab';
 import { ConfraTab } from './components/ConfraTab';
 import { AgendaTab } from './components/AgendaTab';
@@ -8,6 +8,7 @@ import { RelatorioModal } from './components/RelatorioModal';
 import { AdminModal } from './components/AdminModal';
 import { PixInfo } from './types';
 import { DataStore } from './lib/dataStore';
+import { getSupabase } from './lib/supabase';
 import { 
   Music, 
   Receipt, 
@@ -22,6 +23,7 @@ import {
 export default function App() {
   const [activeTab, setActiveTab] = useState<'financeiro' | 'confra' | 'agenda' | 'github'>('financeiro');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [dataVersion, setDataVersion] = useState(0);
   const [currentPix, setCurrentPix] = useState<PixInfo | null>(null);
   const [relatorioModal, setRelatorioModal] = useState<{ open: boolean; title: string; conteudo: string }>({
     open: false,
@@ -30,13 +32,41 @@ export default function App() {
   });
   const [showAdminModal, setShowAdminModal] = useState(false);
 
+  useEffect(() => {
+    let mounted = true;
+    const client = getSupabase();
+
+    void DataStore.initialize().finally(() => {
+      if (mounted) setDataVersion(version => version + 1);
+    });
+
+    if (!client) return () => { mounted = false; };
+
+    void client.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+      const user = data.session?.user;
+      setIsAdmin(user?.app_metadata?.role === 'admin');
+    });
+
+    const { data: authListener } = client.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      const user = session?.user;
+      setIsAdmin(user?.app_metadata?.role === 'admin');
+    });
+
+    return () => {
+      mounted = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
   const handleConfirmPix = (pix: PixInfo) => {
     if (pix.tipo === 'mensal' && pix.membro_id && pix.mes) {
       const mesNum = typeof pix.mes === 'number' ? pix.mes : pix.mes[0];
-      DataStore.setStatusMensalidade(pix.membro_id, mesNum, 'Pago');
+      DataStore.setStatusMensalidade(pix.membro_id, mesNum, 'Pago', pix.ano, pix.payment_id);
     } else if (pix.tipo === 'confra' && pix.membro_id) {
-      // Baixa na confraternização
-      DataStore.updateConfraStatus(pix.membro_id, 'set', 'Pago');
+      const parcelas: ('set' | 'out' | 'nov')[] = pix.parcelas?.length ? pix.parcelas : ['set'];
+      parcelas.forEach(parcela => DataStore.updateConfraStatus(pix.membro_id!, parcela, 'Pago'));
     }
   };
 
@@ -70,7 +100,10 @@ export default function App() {
                 <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
                 <span>Admin Ativo</span>
                 <button
-                  onClick={() => setIsAdmin(false)}
+                  onClick={() => {
+                    void getSupabase()?.auth.signOut();
+                    setIsAdmin(false);
+                  }}
                   className="text-zinc-500 hover:text-zinc-300 ml-1 text-[11px]"
                   title="Sair do modo Admin"
                 >
@@ -169,13 +202,13 @@ export default function App() {
         )}
 
         {activeTab === 'github' && (
-          <GitHubTab />
+          <GitHubTab key={`github-${dataVersion}`} />
         )}
       </main>
 
       {/* Footer */}
       <footer className="border-t border-zinc-800/80 py-6 text-center text-xs text-zinc-500">
-        <p>Portal do Ministério de Louvor &copy; 2026 — INA Esperança</p>
+        <p>Portal do Ministério de Louvor &copy; {new Date().getFullYear()} — INA Esperança</p>
         <p className="text-[11px] text-zinc-600 mt-1">
           Hospedado na Cloudflare com Supabase PostgreSQL e Pagamentos via Mercado Pago
         </p>
@@ -186,7 +219,6 @@ export default function App() {
         pix={currentPix}
         onClose={() => setCurrentPix(null)}
         onConfirmSuccess={handleConfirmPix}
-        isAdmin={isAdmin}
       />
 
       <RelatorioModal

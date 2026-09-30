@@ -12,84 +12,83 @@ export async function gerarPix(params: {
   tipo: 'mensal' | 'confra';
   membro_id?: string;
   mes?: number | number[];
+  ano?: number;
+  parcelas?: ('set' | 'out' | 'nov')[];
 }): Promise<PixInfo> {
-  // Tenta chamar o endpoint de Functions (/api/pix/create)
+  if (!params.nome.trim() || !Number.isFinite(params.valor) || params.valor <= 0) {
+    throw new Error('Nome e valor válido são obrigatórios para gerar o PIX.');
+  }
+
   try {
     const res = await fetch('/api/pix/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(params),
     });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.sucesso) {
-        return {
-          payment_id: data.payment_id,
-          qr_code: data.qr_code,
-          qr_code_base64: data.qr_code_base64,
-          valor: params.valor,
-          nome: params.nome,
-          descricao: params.descricao || (params.tipo === 'confra' ? 'Confraternização' : 'Contribuição Mensal'),
-          mes: params.mes,
-          tipo: params.tipo,
-          membro_id: params.membro_id,
-        };
-      }
+    const data = await res.json().catch(() => null);
+
+    if (res.ok && data?.sucesso && data.payment_id && data.qr_code && data.qr_code_base64) {
+      return {
+        payment_id: String(data.payment_id),
+        qr_code: data.qr_code,
+        qr_code_base64: data.qr_code_base64,
+        valor: params.valor,
+        nome: params.nome,
+        descricao: params.descricao || (params.tipo === 'confra' ? 'Confraternização' : 'Contribuição Mensal'),
+        mes: params.mes,
+        ano: params.ano,
+        parcelas: params.parcelas,
+        tipo: params.tipo,
+        membro_id: params.membro_id,
+      };
     }
-  } catch (e) {
-    console.warn('API /api/pix/create indisponível no preview local, usando fallback simulado realístico.');
+
+    if (!import.meta.env.DEV) {
+      throw new Error(data?.erro || 'Não foi possível gerar o PIX.');
+    }
+  } catch (error) {
+    if (!import.meta.env.DEV) throw error;
+    console.warn('API /api/pix/create indisponível no preview local; usando modo de demonstração.');
   }
 
-  // Fallback simulador dinâmico de PIX para testes instantâneos no preview
-  const mockId = String(Math.floor(1000000000 + Math.random() * 9000000000));
-  const pixCopiaCola = `00020126580014br.gov.bcb.pix0136b6f7a6a4-4df1-4a1e-8e8e-9c76251b5e39520400005303986540${params.valor.toFixed(2).length}${params.valor.toFixed(2)}5802BR5915INA ESPERANCA6009SAO PAULO62070503***6304E8A2`;
-
-  // Gera um SVG de QR code válido em base64 como fallback
+  // O fallback é permitido somente no desenvolvimento e é explicitamente simulado.
+  const mockId = `mock-${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+  const pixCopiaCola = `PIX-DEMO-${params.valor.toFixed(2)}-${mockId}`;
   const mockSvg = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
       <rect width="200" height="200" fill="white" rx="12"/>
-      <rect x="20" y="20" width="40" height="40" fill="black" rx="4"/>
-      <rect x="28" y="28" width="24" height="24" fill="white" rx="2"/>
-      <rect x="34" y="34" width="12" height="12" fill="black"/>
-      <rect x="140" y="20" width="40" height="40" fill="black" rx="4"/>
-      <rect x="148" y="28" width="24" height="24" fill="white" rx="2"/>
-      <rect x="154" y="34" width="12" height="12" fill="black"/>
-      <rect x="20" y="140" width="40" height="40" fill="black" rx="4"/>
-      <rect x="28" y="148" width="24" height="24" fill="white" rx="2"/>
-      <rect x="34" y="154" width="12" height="12" fill="black"/>
-      <!-- Padrão Pix -->
-      <path d="M70,25 h15 v15 h-15 z M95,25 h20 v10 h-20 z M70,55 h30 v10 h-30 z M115,50 h15 v25 h-15 z M70,80 h15 v15 h-15 z M95,75 h20 v20 h-20 z M130,85 h20 v15 h-20 z M25,90 h25 v15 h-25 z M60,110 h35 v10 h-35 z M110,110 h25 v15 h-25 z M150,110 h25 v15 h-25 z M75,135 h20 v20 h-20 z M105,145 h30 v15 h-30 z M145,140 h30 v25 h-30 z" fill="#121212"/>
-      <text x="100" y="185" font-family="sans-serif" font-size="10" font-weight="bold" fill="#000" text-anchor="middle">PIX R$ ${params.valor.toFixed(2)}</text>
+      <rect x="20" y="20" width="40" height="40" fill="black" rx="4"/><rect x="28" y="28" width="24" height="24" fill="white"/><rect x="34" y="34" width="12" height="12" fill="black"/>
+      <rect x="140" y="20" width="40" height="40" fill="black" rx="4"/><rect x="148" y="28" width="24" height="24" fill="white"/><rect x="154" y="34" width="12" height="12" fill="black"/>
+      <rect x="20" y="140" width="40" height="40" fill="black" rx="4"/><rect x="28" y="148" width="24" height="24" fill="white"/><rect x="34" y="154" width="12" height="12" fill="black"/>
+      <path d="M70 25h15v15H70zM95 25h20v10H95zM70 55h30v10H70zM115 50h15v25h-15zM70 80h15v15H70zM95 75h20v20H95zM130 85h20v15h-20zM25 90h25v15H25zM60 110h35v10H60zM110 110h25v15h-25zM150 110h25v15h-25zM75 135h20v20H75zM105 145h30v15h-30zM145 140h30v25h-30z" fill="#121212"/>
+      <text x="100" y="185" font-family="sans-serif" font-size="10" font-weight="bold" fill="#000" text-anchor="middle">DEMO R$ ${params.valor.toFixed(2)}</text>
     </svg>
   `;
-  const base64 = btoa(mockSvg);
 
   return {
     payment_id: mockId,
     qr_code: pixCopiaCola,
-    qr_code_base64: base64,
+    qr_code_base64: `data:image/svg+xml;base64,${btoa(mockSvg)}`,
     valor: params.valor,
     nome: params.nome,
     descricao: params.descricao || (params.tipo === 'confra' ? 'Confraternização' : 'Contribuição Mensal'),
     mes: params.mes,
+    ano: params.ano,
+    parcelas: params.parcelas,
     tipo: params.tipo,
     membro_id: params.membro_id,
   };
 }
 
-export async function fetchLouveAppEscalas(mes: number, ano: number = 2026): Promise<EventoAgenda[]> {
-  try {
-    const res = await fetch(`/api/louveapp/escalas?mes=${mes}&ano=${ano}`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data.sucesso && Array.isArray(data.eventos)) {
-        return data.eventos;
-      }
-    }
-  } catch (err) {
-    console.warn('LouveApp API local fallback:', err);
+export async function fetchLouveAppEscalas(mes: number, ano: number = new Date().getFullYear()): Promise<EventoAgenda[]> {
+  const res = await fetch(`/api/louveapp/escalas?mes=${mes}&ano=${ano}`);
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok || !data?.sucesso || !Array.isArray(data.eventos)) {
+    throw new Error(data?.erro || `LouveApp retornou HTTP ${res.status}.`);
   }
-  return [];
+
+  return data.eventos;
 }
 
 // FORMATADORES DE RELATÓRIO DO WHATSAPP

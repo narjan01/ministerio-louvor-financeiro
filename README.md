@@ -102,6 +102,16 @@ O aplicativo estará disponível em `http://localhost:3000`.
 
 ---
 
-## 🔐 Senha Padrão de Administrador
+## 🔐 Acesso Administrativo
 
-- Senha de acesso administrativo master: `admin123` (ou configurável no Supabase).
+O acesso administrativo usa o **Supabase Auth**. Crie um usuário em `Authentication → Users` e atribua a role `admin` em `app_metadata` pelo painel ou por uma operação segura no backend. A senha não fica armazenada no frontend.
+
+Exemplo para executar no SQL Editor do próprio Supabase, substituindo o e-mail:
+
+```sql
+update auth.users
+set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb
+where email = 'admin@exemplo.com';
+```
+
+No preview local, quando o Supabase não estiver configurado, existe um modo de demonstração de desenvolvimento. Esse modo não é habilitado no build de produção.

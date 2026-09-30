@@ -31,7 +31,7 @@ export const AgendaTab: React.FC<AgendaTabProps> = ({
   onOpenRelatorio,
 }) => {
   const [mesAtual, setMesAtual] = useState<number>(new Date().getMonth() + 1);
-  const [anoAtual] = useState<number>(2026);
+  const [anoAtual] = useState<number>(new Date().getFullYear());
   const [diaSelecionado, setDiaSelecionado] = useState<number | null>(5); // default dia 5 para exibir o primeiro evento
   
   // Eventos e Presença
@@ -107,6 +107,7 @@ export const AgendaTab: React.FC<AgendaTabProps> = ({
             categoria: 'Escala LouveApp',
             escalados: esc.escalados,
             isApi: true,
+            origem_id: esc.origem_id,
           });
         });
         setEventos(DataStore.getEventos(mesAtual));
@@ -133,7 +134,8 @@ export const AgendaTab: React.FC<AgendaTabProps> = ({
   const handleSalvarChamadaLote = () => {
     if (!diaSelecionado) return;
     const dataFormatada = `${('0' + diaSelecionado).slice(-2)}/${('0' + mesAtual).slice(-2)}/${anoAtual}`;
-    DataStore.saveFrequencia(dataFormatada, frequenciaData);
+    const evAlvo = eventos.find(e => e.mes === mesAtual && e.dia === diaSelecionado);
+    DataStore.saveFrequencia(dataFormatada, frequenciaData, evAlvo?.id);
     setTemAlteracoesChamada(false);
     alert(`Chamada salva com sucesso para o dia ${dataFormatada}!`);
   };
@@ -223,9 +225,9 @@ export const AgendaTab: React.FC<AgendaTabProps> = ({
 
           <button
             onClick={handleSincronizarLouveApp}
-            disabled={syncingLouveApp}
-            className="px-3 py-2 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-400 text-xs font-semibold flex items-center gap-1.5 transition"
-            title="Importar escalas do LouveApp API"
+            disabled={!isAdmin || syncingLouveApp}
+            className="px-3 py-2 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-400 text-xs font-semibold flex items-center gap-1.5 transition disabled:opacity-40"
+            title="Importar escalas do LouveApp API (administrador)"
           >
             <DownloadCloud className={`w-3.5 h-3.5 ${syncingLouveApp ? 'animate-bounce' : ''}`} />
             {syncingLouveApp ? 'Sincronizando...' : 'LouveApp API'}
@@ -364,7 +366,7 @@ export const AgendaTab: React.FC<AgendaTabProps> = ({
                 eventosDiaSelecionado.map((ev) => {
                   const linkGcal = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
                     `${ev.titulo} - Ministério de Louvor`
-                  )}&dates=${ev.gcal || '20260901/20260902'}`;
+                  )}&dates=${ev.gcal || ''}`;
 
                   const msgWpp = `📅 *${ev.titulo}* do Ministério de Louvor!\n📆 Data: ${ev.dataFormatada}\nCategoria: ${ev.categoria}\nAdicione à sua agenda: ${linkGcal}`;
 

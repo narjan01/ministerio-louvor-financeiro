@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Membro, Mensalidade, Transacao, PixInfo } from '../types';
+import { Membro, PixInfo } from '../types';
 import { DataStore } from '../lib/dataStore';
 import { MESES_NOMES, formatarRelatorioFinanceiro, gerarPix } from '../lib/services';
 import { 
@@ -30,7 +30,7 @@ export const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   onOpenRelatorio,
 }) => {
   const [mesAtual, setMesAtual] = useState<number>(new Date().getMonth() + 1);
-  const [anoAtual] = useState<number>(2026);
+  const [anoAtual] = useState<number>(new Date().getFullYear());
   const [filtro, setFiltro] = useState<string>('');
   
   // Modais de detalhamento
@@ -45,6 +45,8 @@ export const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   const [tipoTransacao, setTipoTransacao] = useState<'DESPESA' | 'OFERTA'>('DESPESA');
   const [descricaoTransacao, setDescricaoTransacao] = useState('');
   const [valorTransacao, setValorTransacao] = useState('');
+  const [gerandoPixId, setGerandoPixId] = useState<string | null>(null);
+  const [erroPix, setErroPix] = useState('');
 
   // Carrega dados
   const membros = DataStore.getMembros();
@@ -56,7 +58,7 @@ export const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   const isentos = membros.filter(m => mensalidades[m.id]?.status === 'Isento');
   const pendentes = membros.filter(m => !mensalidades[m.id] || mensalidades[m.id]?.status === 'Pendente');
 
-  const totalMensalidades = quitados.length * 10;
+  const totalMensalidades = quitados.reduce((total, membro) => total + (mensalidades[membro.id]?.valor || 0), 0);
   const ofertas = transacoes.filter(t => t.tipo === 'OFERTA').reduce((acc, t) => acc + t.valor, 0);
   const despesas = transacoes.filter(t => t.tipo === 'DESPESA').reduce((acc, t) => acc + t.valor, 0);
   const totalReceitas = totalMensalidades + ofertas;
@@ -82,15 +84,24 @@ export const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   };
 
   const handleIniciarPix = async (membro: Membro) => {
-    const pix = await gerarPix({
-      nome: membro.nome,
-      valor: 10.00,
-      descricao: `Mensalidade ${MESES_NOMES[mesAtual - 1]} - ${membro.nome}`,
-      tipo: 'mensal',
-      membro_id: membro.id,
-      mes: mesAtual,
-    });
-    onOpenPix(pix);
+    setGerandoPixId(membro.id);
+    setErroPix('');
+    try {
+      const pix = await gerarPix({
+        nome: membro.nome,
+        valor: 10.00,
+        descricao: `Mensalidade ${MESES_NOMES[mesAtual - 1]} - ${membro.nome}`,
+        tipo: 'mensal',
+        membro_id: membro.id,
+        mes: mesAtual,
+        ano: anoAtual,
+      });
+      onOpenPix(pix);
+    } catch (error: any) {
+      setErroPix(error?.message || 'Não foi possível gerar o PIX.');
+    } finally {
+      setGerandoPixId(null);
+    }
   };
 
   const handleSalvarNovoMembro = (e: React.FormEvent) => {
@@ -169,6 +180,13 @@ export const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
           Exportar WhatsApp
         </button>
       </div>
+
+      {erroPix && (
+        <div role="alert" className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+          <span className="flex items-center gap-2"><AlertCircle className="w-4 h-4 shrink-0" />{erroPix}</span>
+          <button onClick={() => setErroPix('')} className="text-rose-200 hover:text-white" aria-label="Fechar erro do PIX">×</button>
+        </div>
+      )}
 
       {/* Cards Métricas */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -324,10 +342,11 @@ export const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
                           </div>
                         ) : (
                           <button
-                            onClick={() => handleIniciarPix(membro)}
-                            className="px-3.5 py-1.5 rounded-xl border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500 hover:text-zinc-950 font-bold text-xs flex items-center gap-1.5 transition shadow-sm"
+                            onClick={() => void handleIniciarPix(membro)}
+                            disabled={gerandoPixId === membro.id}
+                            className="px-3.5 py-1.5 rounded-xl border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500 hover:text-zinc-950 disabled:opacity-50 font-bold text-xs flex items-center gap-1.5 transition shadow-sm"
                           >
-                            <QrCode className="w-3.5 h-3.5" /> PIX R$ 10
+                            <QrCode className="w-3.5 h-3.5" /> {gerandoPixId === membro.id ? 'Gerando...' : 'PIX R$ 10'}
                           </button>
                         )}
 
@@ -387,7 +406,7 @@ export const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
               {quitados.map(m => (
                 <div key={m.id} className="flex justify-between items-center text-xs py-1.5 border-b border-zinc-800 text-zinc-300">
                   <span>{m.nome}</span>
-                  <span className="font-semibold text-emerald-400 font-mono">R$ 10,00</span>
+                  <span className="font-semibold text-emerald-400 font-mono">{fmt(mensalidades[m.id]?.valor || 0)}</span>
                 </div>
               ))}
 

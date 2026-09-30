@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Lock, KeyRound } from 'lucide-react';
+import { getSupabase, getSupabaseConfig } from '../lib/supabase';
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -8,21 +9,70 @@ interface AdminModalProps {
 }
 
 export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [erro, setErro] = useState(false);
+  const [erro, setErro] = useState('');
+  const [loading, setLoading] = useState(false);
+  const supabaseConfigured = getSupabaseConfig().isConfigured;
 
   if (!isOpen) return null;
 
-  const handleEntrar = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Senha compatível com a do Google Apps Script ('admin123')
-    if (senha === 'admin123' || senha === 'admin') {
-      onSuccess();
-      onClose();
-      setSenha('');
-      setErro(false);
-    } else {
-      setErro(true);
+  const handleEntrar = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setErro('');
+
+    if (!senha.trim()) {
+      setErro('Informe a senha.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const client = getSupabase();
+
+      if (client) {
+        if (!email.trim()) {
+          setErro('Informe o e-mail do usuário administrador.');
+          return;
+        }
+
+        const { data, error } = await client.auth.signInWithPassword({
+          email: email.trim(),
+          password: senha,
+        });
+
+        if (error || !data.user) {
+          setErro(error?.message || 'Não foi possível autenticar.');
+          return;
+        }
+
+        const isAdmin = data.user.app_metadata?.role === 'admin';
+        if (!isAdmin) {
+          await client.auth.signOut();
+          setErro('Este usuário não possui permissão administrativa.');
+          return;
+        }
+
+        onSuccess();
+        onClose();
+        setEmail('');
+        setSenha('');
+        return;
+      }
+
+      // Fallback apenas para o preview local. Nunca é aceito em produção.
+      if (import.meta.env.DEV && senha === 'admin123') {
+        onSuccess();
+        onClose();
+        setSenha('');
+        return;
+      }
+
+      setErro('Configure o Supabase Auth para acessar o modo administrativo.');
+    } catch (error: any) {
+      setErro(error?.message || 'Erro ao autenticar.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -32,6 +82,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onSucce
         <button
           onClick={onClose}
           className="absolute right-4 top-4 text-zinc-400 hover:text-white p-1 rounded-lg"
+          aria-label="Fechar acesso administrativo"
         >
           <X className="w-5 h-5" />
         </button>
@@ -42,32 +93,53 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose, onSucce
 
         <h3 className="text-lg font-bold text-white mb-1">Acesso Administrativo</h3>
         <p className="text-xs text-zinc-400 mb-4">
-          Digite a senha master para liberar baixas manuais e edição.
+          {supabaseConfigured
+            ? 'Entre com um usuário do Supabase Auth que tenha a role admin.'
+            : 'O modo local permite apenas uma demonstração; em produção configure o Supabase Auth.'}
         </p>
 
         <form onSubmit={handleEntrar} className="space-y-3">
-          <div>
-            <input
-              type="password"
-              autoFocus
-              placeholder="Senha de administrador..."
-              value={senha}
-              onChange={(e) => {
-                setSenha(e.target.value);
-                setErro(false);
-              }}
-              className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-3 py-2.5 text-center text-sm focus:outline-none focus:border-purple-500"
-            />
-            {erro && (
-              <p className="text-xs text-rose-400 mt-1.5 font-medium">Senha incorreta! Dica: admin123</p>
-            )}
+          {supabaseConfigured && (
+            <div className="text-left">
+              <label htmlFor="admin-email" className="text-xs font-medium text-zinc-400 block mb-1">E-mail</label>
+              <input
+                id="admin-email"
+                type="email"
+                autoComplete="username"
+                required
+                placeholder="admin@exemplo.com"
+                value={email}
+                onChange={(event) => { setEmail(event.target.value); setErro(''); }}
+                className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-purple-500"
+              />
+            </div>
+          )}
+
+          <div className="text-left">
+            <label htmlFor="admin-password" className="text-xs font-medium text-zinc-400 block mb-1">Senha</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+              <input
+                id="admin-password"
+                type="password"
+                autoComplete="current-password"
+                autoFocus={!supabaseConfigured}
+                required
+                placeholder="Senha de administrador"
+                value={senha}
+                onChange={(event) => { setSenha(event.target.value); setErro(''); }}
+                className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-purple-500"
+              />
+            </div>
+            {erro && <p className="text-xs text-rose-400 mt-1.5 font-medium">{erro}</p>}
           </div>
 
           <button
             type="submit"
-            className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition"
+            disabled={loading}
+            className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-bold text-xs transition"
           >
-            Acessar Painel
+            {loading ? 'Autenticando...' : 'Acessar Painel'}
           </button>
         </form>
       </div>

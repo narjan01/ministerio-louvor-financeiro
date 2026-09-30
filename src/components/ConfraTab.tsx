@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ParticipanteConfra, PixInfo, Membro } from '../types';
 import { DataStore } from '../lib/dataStore';
 import { formatarRelatorioConfra, gerarPix } from '../lib/services';
-import { PartyPopper, UserPlus, Share2, Search, QrCode, Check, X, ShieldCheck } from 'lucide-react';
+import { PartyPopper, UserPlus, Share2, Search, QrCode, Check, X } from 'lucide-react';
 
 interface ConfraTabProps {
   isAdmin: boolean;
@@ -18,6 +18,8 @@ export const ConfraTab: React.FC<ConfraTabProps> = ({
   const [filtro, setFiltro] = useState('');
   const [selectedChecks, setSelectedChecks] = useState<Record<string, { set: boolean; out: boolean; nov: boolean }>>({});
   const [showAddConvidadoModal, setShowAddConvidadoModal] = useState(false);
+  const [gerandoPixId, setGerandoPixId] = useState<string | null>(null);
+  const [erroPix, setErroPix] = useState('');
 
   // Form convidado
   const [nomeConvidado, setNomeConvidado] = useState('');
@@ -62,7 +64,6 @@ export const ConfraTab: React.FC<ConfraTabProps> = ({
     if (checks.nov && p.nov !== 'Pago') parcelasSelecionadas.push('nov');
 
     if (parcelasSelecionadas.length === 0) {
-      // Se nenhuma caixinha marcada, sugere a primeira parcela pendente
       if (p.set !== 'Pago') parcelasSelecionadas.push('set');
       else if (p.out !== 'Pago') parcelasSelecionadas.push('out');
       else if (p.nov !== 'Pago') parcelasSelecionadas.push('nov');
@@ -70,18 +71,25 @@ export const ConfraTab: React.FC<ConfraTabProps> = ({
 
     if (parcelasSelecionadas.length === 0) return;
 
-    const valor = parcelasSelecionadas.length * 15.00;
-    const nomesParcelas = parcelasSelecionadas.map(pr => pr === 'set' ? 'Set' : pr === 'out' ? 'Out' : 'Nov').join(' + ');
-
-    const pix = await gerarPix({
-      nome: p.nome,
-      valor,
-      descricao: `Confraternização (${nomesParcelas}) - ${p.nome}`,
-      tipo: 'confra',
-      membro_id: p.id,
-    });
-
-    onOpenPix(pix);
+    setGerandoPixId(p.id);
+    setErroPix('');
+    try {
+      const valor = parcelasSelecionadas.length * 15.00;
+      const nomesParcelas = parcelasSelecionadas.map(pr => pr === 'set' ? 'Set' : pr === 'out' ? 'Out' : 'Nov').join(' + ');
+      const pix = await gerarPix({
+        nome: p.nome,
+        valor,
+        descricao: `Confraternização (${nomesParcelas}) - ${p.nome}`,
+        tipo: 'confra',
+        membro_id: p.id,
+        parcelas: parcelasSelecionadas,
+      });
+      onOpenPix(pix);
+    } catch (error: any) {
+      setErroPix(error?.message || 'Não foi possível gerar o PIX.');
+    } finally {
+      setGerandoPixId(null);
+    }
   };
 
   const handleSalvarConvidado = (e: React.FormEvent) => {
@@ -131,7 +139,7 @@ export const ConfraTab: React.FC<ConfraTabProps> = ({
               {fmt(totalApurado)}
             </span>
             <span className="text-[11px] text-emerald-400 mt-0.5">
-              {Math.round((totalApurado / (participantes.length * 45)) * 100)}% da meta estimada
+              {participantes.length ? Math.round((totalApurado / (participantes.length * 45)) * 100) : 0}% da meta estimada
             </span>
           </div>
         </div>
@@ -168,6 +176,13 @@ export const ConfraTab: React.FC<ConfraTabProps> = ({
           </button>
         </div>
       </div>
+
+      {erroPix && (
+        <div role="alert" className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+          <span>{erroPix}</span>
+          <button onClick={() => setErroPix('')} className="text-rose-200 hover:text-white" aria-label="Fechar erro do PIX">×</button>
+        </div>
+      )}
 
       {/* Lista de Participantes */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm">
@@ -293,10 +308,11 @@ export const ConfraTab: React.FC<ConfraTabProps> = ({
                         </div>
                       ) : (
                         <button
-                          onClick={() => handleIniciarPixConfra(p)}
-                          className="px-3.5 py-1.5 rounded-xl border border-amber-500/40 text-amber-400 hover:bg-amber-500 hover:text-zinc-950 font-bold text-xs inline-flex items-center gap-1.5 transition shadow-sm"
+                          onClick={() => void handleIniciarPixConfra(p)}
+                          disabled={gerandoPixId === p.id}
+                          className="px-3.5 py-1.5 rounded-xl border border-amber-500/40 text-amber-400 hover:bg-amber-500 hover:text-zinc-950 disabled:opacity-50 font-bold text-xs inline-flex items-center gap-1.5 transition shadow-sm"
                         >
-                          <QrCode className="w-3.5 h-3.5" /> PIX R$ {valorCalculadoPix}
+                          <QrCode className="w-3.5 h-3.5" /> {gerandoPixId === p.id ? 'Gerando...' : `PIX R$ ${valorCalculadoPix}`}
                         </button>
                       )}
                     </td>
