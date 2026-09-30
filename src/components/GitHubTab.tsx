@@ -177,37 +177,59 @@ export const GitHubTab: React.FC = () => {
             </div>
           </div>
 
-          {/* Card Umbler API */}
+          {/* Card Configuração Cloudflare DNS */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 shadow-sm space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <Server className="w-4 h-4 text-sky-400" />
-                DNS Umbler: Subdomínio Configurado
+                <Server className="w-4 h-4 text-amber-400" />
+                Configuração DNS Cloudflare (Tabela de Registros)
               </h3>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-semibold border border-emerald-500/30">
-                Ativo
+              <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[11px] font-semibold border border-amber-500/30">
+                Ação no Painel
               </span>
             </div>
 
-            <div className="space-y-2 text-xs text-zinc-400">
-              <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800/80 space-y-1.5 font-mono text-[11px]">
-                <div className="flex justify-between text-zinc-300">
-                  <span className="text-zinc-500">Subdomínio Criado:</span>
-                  <span className="text-emerald-400 font-bold">louvor.novaliancaesperancajp.com.br</span>
-                </div>
-                <div className="flex justify-between text-zinc-300">
-                  <span className="text-zinc-500">Domínio Raiz:</span>
-                  <span className="text-zinc-200">novaliancaesperancajp.com.br</span>
-                </div>
-                <div className="flex justify-between text-zinc-300">
-                  <span className="text-zinc-500">DNS Record ID:</span>
-                  <span className="text-sky-300">4656973 (Tipo A / CNAME)</span>
-                </div>
+            <div className="space-y-3 text-xs text-zinc-400">
+              <p className="text-zinc-300">
+                Para ter a <strong>Página Principal da Igreja</strong> em <code className="text-purple-400 font-bold">novaliancaesperancajp.com.br</code> e o <strong>Portal do Louvor</strong> em <code className="text-emerald-400 font-bold">louvor.novaliancaesperancajp.com.br</code>, configure seus registros DNS assim:
+              </p>
+
+              <div className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-950 p-2 font-mono text-[11px]">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-zinc-800 text-zinc-400">
+                      <th className="p-2">Tipo</th>
+                      <th className="p-2">Nome</th>
+                      <th className="p-2">Destino / Conteúdo</th>
+                      <th className="p-2">Proxy</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-900 text-zinc-300">
+                    <tr>
+                      <td className="p-2 text-amber-400 font-bold">CNAME</td>
+                      <td className="p-2 font-bold text-white">@</td>
+                      <td className="p-2 text-purple-300">&lt;seu-projeto&gt;.pages.dev</td>
+                      <td className="p-2 text-amber-500">Laranja (Ativo)</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 text-amber-400 font-bold">CNAME</td>
+                      <td className="p-2 font-bold text-white">www</td>
+                      <td className="p-2 text-purple-300">novaliancaesperancajp.com.br</td>
+                      <td className="p-2 text-amber-500">Laranja (Ativo)</td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 text-emerald-400 font-bold">CNAME</td>
+                      <td className="p-2 font-bold text-white">louvor</td>
+                      <td className="p-2 text-purple-300">&lt;seu-projeto&gt;.pages.dev</td>
+                      <td className="p-2 text-amber-500">Laranja (Ativo)</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
 
-              <p className="text-[11px] text-zinc-400">
-                Ao publicar o projeto no <strong>Cloudflare Pages</strong>, se desejar vincular este endereço oficial, basta adicionar <code>louvor.novaliancaesperancajp.com.br</code> em <em>Custom Domains</em>.
-              </p>
+              <div className="p-3 rounded-xl bg-purple-950/20 border border-purple-500/20 text-purple-300 text-[11px] leading-relaxed">
+                💡 <strong>Dica Cloudflare Pages:</strong> No menu <em>Workers & Pages</em> &rarr; seu projeto &rarr; <em>Custom Domains</em>, cadastre tanto <code>novaliancaesperancajp.com.br</code> quanto <code>louvor.novaliancaesperancajp.com.br</code>. O sistema exibirá a página certa automaticamente para cada um!
+              </div>
             </div>
           </div>
 

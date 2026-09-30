@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FinanceiroTab } from './components/FinanceiroTab';
 import { ConfraTab } from './components/ConfraTab';
 import { AgendaTab } from './components/AgendaTab';
 import { GitHubTab } from './components/GitHubTab';
+import { ChurchLandingPage } from './components/ChurchLandingPage';
 import { PixModal } from './components/PixModal';
 import { RelatorioModal } from './components/RelatorioModal';
 import { AdminModal } from './components/AdminModal';
@@ -16,10 +17,12 @@ import {
   GitBranch, 
   Shield, 
   ShieldCheck, 
-  ExternalLink 
+  ExternalLink,
+  Church
 } from 'lucide-react';
 
 export default function App() {
+  const [viewMode, setViewMode] = useState<'church' | 'louvor'>('louvor');
   const [activeTab, setActiveTab] = useState<'financeiro' | 'confra' | 'agenda' | 'github'>('financeiro');
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentPix, setCurrentPix] = useState<PixInfo | null>(null);
@@ -29,6 +32,31 @@ export default function App() {
     conteudo: '',
   });
   const [showAdminModal, setShowAdminModal] = useState(false);
+
+  useEffect(() => {
+    // Detectar automaticamente se o usuário está acessando pelo domínio raiz (novaliancaesperancajp.com.br ou www)
+    const hostname = window.location.hostname.toLowerCase();
+    const urlParams = new URLSearchParams(window.location.search);
+    const viewParam = urlParams.get('view');
+
+    if (viewParam === 'igreja' || viewParam === 'church') {
+      setViewMode('church');
+    } else if (viewParam === 'louvor') {
+      setViewMode('louvor');
+    } else if (
+      hostname === 'novaliancaesperancajp.com.br' || 
+      hostname === 'www.novaliancaesperancajp.com.br'
+    ) {
+      setViewMode('church');
+    } else {
+      // Se for louvor.novaliancaesperancajp.com.br ou ambiente de preview/dev
+      setViewMode('louvor');
+    }
+  }, []);
+
+  if (viewMode === 'church') {
+    return <ChurchLandingPage onGoToLouvorPortal={() => setViewMode('louvor')} />;
+  }
 
   const handleConfirmPix = (pix: PixInfo) => {
     if (pix.tipo === 'mensal' && pix.membro_id && pix.mes) {
@@ -65,6 +93,16 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setViewMode('church')}
+              className="px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 hover:text-white text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
+              title="Ver página de apresentação da igreja (novaliancaesperancajp.com.br)"
+            >
+              <Church className="w-3.5 h-3.5 text-purple-400" />
+              <span className="hidden sm:inline">Página da Igreja</span>
+              <span className="sm:hidden">Igreja</span>
+            </button>
+
             {isAdmin ? (
               <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-bold">
                 <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
