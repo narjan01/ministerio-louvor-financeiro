@@ -26,7 +26,8 @@ Desenvolvido para hospedagem gratuita de alta performance no **Cloudflare Pages*
 │   └── api/
 │       ├── pix/
 │       │   ├── create.ts       # Geração de PIX seguro com token secreto
-│       │   └── status.ts       # Consulta do status do pagamento
+│       │   ├── status.ts       # Consulta do status do pagamento
+│       │   └── webhook.ts      # Confirmação server-side e baixa automática
 │       └── louveapp/
 │           └── escalas.ts      # Proxy seguro para LouveApp API
 ├── src/
@@ -96,9 +97,12 @@ O aplicativo estará disponível em `http://localhost:3000`.
 5. Em **Environment variables**, configure:
    - `VITE_SUPABASE_URL`: sua URL do Supabase
    - `VITE_SUPABASE_ANON_KEY`: sua chave anônima do Supabase
-   - `MP_ACCESS_TOKEN`: seu token de produção do Mercado Pago (criptografado)
-   - `LOUVEAPP_TOKEN`: seu token da API do LouveApp (criptografado)
-6. Clique em **Save and Deploy**. Seu portal estará online mundialmente em menos de 1 minuto!
+   - `MP_ACCESS_TOKEN`: seu token de produção do Mercado Pago (Secret)
+   - `LOUVEAPP_TOKEN`: seu token da API do LouveApp (Secret)
+   - `SUPABASE_URL`: URL do projeto para o webhook PIX (Secret/Environment variable)
+   - `SUPABASE_SERVICE_ROLE_KEY`: service role key, somente nas Functions (Secret)
+6. Configure o webhook de pagamentos do Mercado Pago para `https://seu-dominio/api/pix/webhook`.
+7. Clique em **Save and Deploy**. Seu portal estará online mundialmente em menos de 1 minuto!
 
 ---
 
