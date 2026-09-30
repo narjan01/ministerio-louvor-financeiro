@@ -477,7 +477,7 @@ export const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
                     {isAdmin && (
                       <button
                         onClick={() => {
-                          DataStore.deleteTransacao(t.id);
+                          DataStore.deleteTransacao(t.id, mesAtual, anoAtual);
                           setFiltro(f => f);
                         }}
                         className="text-zinc-500 hover:text-rose-400 p-1"
