@@ -3,6 +3,7 @@
 // somente como secret da Function. Ela nunca deve ser exposta ao frontend.
 interface Env {
   MP_ACCESS_TOKEN?: string;
+  MP_WEBHOOK_SECRET?: string;
   SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
 }
@@ -21,6 +22,31 @@ const dbHeaders = (key: string) => ({
   'Content-Type': 'application/json',
 });
 
+const verifySignature = async (request: Request, paymentId: string, secret?: string) => {
+  if (!secret) return false;
+  const signatureHeader = request.headers.get('x-signature') || '';
+  const requestId = request.headers.get('x-request-id') || '';
+  const fields = Object.fromEntries(signatureHeader.split(',').map(part => {
+    const [key, ...value] = part.trim().split('=');
+    return [key, value.join('=')];
+  }));
+  const timestamp = fields.ts;
+  const received = fields.v1;
+  if (!timestamp || !received || !requestId) return false;
+
+  const manifest = `id:${paymentId};request-id:${requestId};ts:${timestamp};`;
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+  const digest = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(manifest));
+  const expected = Array.from(new Uint8Array(digest)).map(byte => byte.toString(16).padStart(2, '0')).join('');
+  return expected.length === received.length && expected === received.toLowerCase();
+};
+
 export const onRequestPost = async (context: { request: Request; env: Env }) => {
   try {
     const body = await context.request.json().catch(() => null) as any;
@@ -28,6 +54,10 @@ export const onRequestPost = async (context: { request: Request; env: Env }) => 
 
     if (!/^\d{1,30}$/.test(paymentId)) {
       return responseJson({ sucesso: false, erro: 'Identificador de pagamento inválido.' }, 400);
+    }
+
+    if (!await verifySignature(context.request, paymentId, context.env.MP_WEBHOOK_SECRET)) {
+      return responseJson({ sucesso: false, erro: 'Assinatura do webhook inválida.' }, 401);
     }
 
     const mpToken = context.env.MP_ACCESS_TOKEN || 'APP_USR-257552080642721-072914-38a3d8757f07af7c456e0761e2fb5caa-70957177';

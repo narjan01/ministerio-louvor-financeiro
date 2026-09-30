@@ -98,6 +98,7 @@ O aplicativo estará disponível em `http://localhost:3000`.
    - `VITE_SUPABASE_URL`: sua URL do Supabase
    - `VITE_SUPABASE_ANON_KEY`: sua chave anônima do Supabase
    - `MP_ACCESS_TOKEN`: seu token de produção do Mercado Pago (Secret)
+   - `MP_WEBHOOK_SECRET`: segredo de assinatura do webhook do Mercado Pago (Secret)
    - `LOUVEAPP_TOKEN`: seu token da API do LouveApp (Secret)
    - `SUPABASE_URL`: URL do projeto para o webhook PIX (Secret/Environment variable)
    - `SUPABASE_SERVICE_ROLE_KEY`: service role key, somente nas Functions (Secret)
