@@ -50,6 +50,7 @@ export const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   const membros = DataStore.getMembros();
   const mensalidades = DataStore.getMensalidades(mesAtual, anoAtual);
   const transacoes = DataStore.getTransacoes(mesAtual, anoAtual);
+  const consolidadoOficial = DataStore.getHistoricoConsolidado(mesAtual);
 
   // Cálculos financeiros
   const quitados = membros.filter(m => mensalidades[m.id]?.status === 'Pago');
@@ -60,8 +61,12 @@ export const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
   const ofertas = transacoes.filter(t => t.tipo === 'OFERTA').reduce((acc, t) => acc + t.valor, 0);
   const despesas = transacoes.filter(t => t.tipo === 'DESPESA').reduce((acc, t) => acc + t.valor, 0);
   const totalReceitas = totalMensalidades + ofertas;
-  const saldoConta = totalReceitas - despesas;
-  const taxaFrequencia = membros.length > 0 ? Math.round(((quitados.length + isentos.length) / membros.length) * 100) : 0;
+  const saldoConta = consolidadoOficial ? consolidadoOficial.valorConta : (totalReceitas - despesas);
+  const saldoMes = consolidadoOficial ? consolidadoOficial.valorRestante : (totalReceitas - despesas);
+  const sobraMesAnterior = consolidadoOficial ? consolidadoOficial.sobraAnterior : 0;
+  const taxaFrequencia = consolidadoOficial 
+    ? consolidadoOficial.percentual 
+    : (membros.length > 0 ? Math.round(((quitados.length + isentos.length) / membros.length) * 100) : 0);
 
   const membrosFiltrados = membros.filter(m => 
     m.nome.toLowerCase().includes(filtro.toLowerCase()) || 
@@ -135,6 +140,43 @@ export const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Banner Oficial do Saldo Atual da Planilha */}
+      <div className="rounded-2xl bg-gradient-to-r from-purple-950/70 via-indigo-950/60 to-zinc-900 border border-purple-500/30 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg shadow-purple-950/20">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+            <Wallet className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-zinc-400">Saldo Atual Geral da Conta</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                Sincronizado
+              </span>
+            </div>
+            <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              R$ 158,33
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs text-zinc-300 bg-zinc-950/60 px-4 py-2.5 rounded-xl border border-zinc-800">
+          <div>
+            <span className="text-zinc-500 block text-[10px] uppercase font-bold">Mensalidade</span>
+            <span className="font-semibold text-white">R$ 10,00</span>
+          </div>
+          <div className="h-6 w-px bg-zinc-800 hidden sm:block"></div>
+          <div>
+            <span className="text-zinc-500 block text-[10px] uppercase font-bold">Membros Ativos</span>
+            <span className="font-semibold text-purple-300">{membros.length} integrantes</span>
+          </div>
+          <div className="h-6 w-px bg-zinc-800 hidden sm:block"></div>
+          <div>
+            <span className="text-zinc-500 block text-[10px] uppercase font-bold">Confraternização</span>
+            <span className="font-semibold text-amber-300">Dez/2026</span>
+          </div>
+        </div>
+      </div>
+
       {/* Top Controls */}
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
         <div className="flex items-center gap-2">
@@ -209,7 +251,7 @@ export const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
         {/* Saldo da Conta */}
         <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-4 sm:p-5 shadow-sm">
           <div className="flex items-center justify-between text-zinc-400 mb-2">
-            <span className="text-xs font-medium">Saldo Mês</span>
+            <span className="text-xs font-medium">Valor na Conta</span>
             <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
               <Wallet className="w-4 h-4" />
             </div>
@@ -217,9 +259,10 @@ export const FinanceiroTab: React.FC<FinanceiroTabProps> = ({
           <div className={`text-xl sm:text-2xl font-black tracking-tight ${saldoConta >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
             {fmt(saldoConta)}
           </div>
-          <span className="text-[11px] text-zinc-500 mt-1 block">
-            Acumulado período
-          </span>
+          <div className="text-[11px] text-zinc-400 mt-1 flex flex-col gap-0.5">
+            <span>Sobra ant.: <strong className="text-zinc-300">{fmt(sobraMesAnterior)}</strong></span>
+            <span>Saldo mês: <strong className={saldoMes >= 0 ? 'text-emerald-400' : 'text-rose-400'}>{fmt(saldoMes)}</strong></span>
+          </div>
         </div>
 
         {/* Frequência de Pagamentos */}

@@ -1,94 +1,49 @@
 import { Membro, Mensalidade, Transacao, EventoAgenda, ParticipanteConfra, ItemFrequencia } from '../types';
-import { getSupabase } from './supabase';
+import { 
+  OFICIAL_MEMBROS, 
+  OFICIAL_HISTORICO_MESES, 
+  OFICIAL_PAGAMENTOS_MATRIZ, 
+  OFICIAL_EVENTOS, 
+  OFICIAL_CONFRA, 
+  OFICIAL_FREQUENCIAS_MATRIZ 
+} from './dadosOficiaisPlanilha';
 
-const INITIAL_MEMBROS: Membro[] = [
-  { id: '1', nome: 'Narjan Trugilho', funcao: 'Líder / Violão', ativo: true },
-  { id: '2', nome: 'Lucas Silva', funcao: 'Teclado', ativo: true },
-  { id: '3', nome: 'Matheus Santos', funcao: 'Bateria', ativo: true },
-  { id: '4', nome: 'Gabriel Oliveira', funcao: 'Baixo', ativo: true },
-  { id: '5', nome: 'Beatriz Costa', funcao: 'Voz Principal', ativo: true },
-  { id: '6', nome: 'Camila Ferreira', funcao: 'Backing Vocal', ativo: true },
-  { id: '7', nome: 'Daniel Almeida', funcao: 'Guitarra', ativo: true },
-  { id: '8', nome: 'Priscila Rocha', funcao: 'Voz / Ministração', ativo: true },
-  { id: '9', nome: 'Thiago Martins', funcao: 'Técnico de Som', ativo: true },
-];
-
-const INITIAL_TRANSACOES: Transacao[] = [
-  { id: 't1', tipo: 'DESPESA', descricao: 'Cabos Santo Angelo P10', valor: 85.00, mes: 9, ano: 2026 },
-  { id: 't2', tipo: 'DESPESA', descricao: 'Pilhas Recarregáveis Microfones', valor: 45.00, mes: 9, ano: 2026 },
-  { id: 't3', tipo: 'OFERTA', descricao: 'Oferta Voluntária Culto Especial', valor: 150.00, mes: 9, ano: 2026 },
-];
-
-const INITIAL_EVENTOS: EventoAgenda[] = [
-  {
-    id: 'e1',
-    titulo: 'Ensaio Geral Banda',
-    data: '2026-09-05',
-    dataFormatada: '05/09/2026',
-    mes: 9,
-    dia: 5,
-    categoria: 'Ensaio',
-    escalados: 'Narjan Trugilho, Lucas Silva, Matheus Santos, Gabriel Oliveira, Beatriz Costa',
-    gcal: '20260905/20260906',
-  },
-  {
-    id: 'e2',
-    titulo: 'Culto de Celebração',
-    data: '2026-09-06',
-    dataFormatada: '06/09/2026',
-    mes: 9,
-    dia: 6,
-    categoria: 'Culto',
-    escalados: 'Narjan Trugilho, Camila Ferreira, Daniel Almeida',
-    gcal: '20260906/20260907',
-  },
-  {
-    id: 'e3',
-    titulo: 'Reunião de Alinhamento e Oração',
-    data: '2026-09-12',
-    dataFormatada: '12/09/2026',
-    mes: 9,
-    dia: 12,
-    categoria: 'Reunião Geral',
-    escalados: '',
-    gcal: '20260912/20260913',
-  },
-  {
-    id: 'e4',
-    titulo: 'Noite de Comunhão & Louvor',
-    data: '2026-09-19',
-    dataFormatada: '19/09/2026',
-    mes: 9,
-    dia: 19,
-    categoria: 'Comunhão',
-    escalados: '',
-    gcal: '20260919/20260920',
-  },
-];
-
-const INITIAL_CONFRA: ParticipanteConfra[] = [
-  { id: 'c1', nome: 'Narjan Trugilho', set: 'Pago', out: 'Pago', nov: 'Pago' },
-  { id: 'c2', nome: 'Lucas Silva', set: 'Pago', out: 'Pendente', nov: 'Pendente' },
-  { id: 'c3', nome: 'Matheus Santos', set: 'Pago', out: 'Pago', nov: 'Pendente' },
-  { id: 'c4', nome: 'Beatriz Costa', set: 'Pendente', out: 'Pendente', nov: 'Pendente' },
-  { id: 'c5', nome: 'Juliana Costa', convidadoPor: 'Beatriz Costa', parentesco: 'Irmã', set: 'Pendente', out: 'Pendente', nov: 'Pendente' },
-  { id: 'c6', nome: 'Gabriel Oliveira', set: 'Pago', out: 'Pendente', nov: 'Pendente' },
-];
+// Versão de controle para forçar atualização do cache local
+const DATA_VERSION_KEY = 'louvor_data_version_v3';
 
 export class DataStore {
+  // Inicialização ou reset caso os dados estejam desatualizados
+  private static ensureLatestData() {
+    const currentVersion = localStorage.getItem(DATA_VERSION_KEY);
+    if (currentVersion !== '2026_oficial_v3') {
+      localStorage.setItem('louvor_membros', JSON.stringify(OFICIAL_MEMBROS));
+      localStorage.setItem('louvor_eventos', JSON.stringify(OFICIAL_EVENTOS));
+      localStorage.setItem('louvor_confra', JSON.stringify(OFICIAL_CONFRA));
+
+      // Limpa chaves antigas de mensalidades para recarregar as oficiais
+      for (let m = 1; m <= 12; m++) {
+        localStorage.removeItem(`louvor_mensalidades_2026_${m}`);
+      }
+      localStorage.removeItem('louvor_transacoes');
+
+      localStorage.setItem(DATA_VERSION_KEY, '2026_oficial_v3');
+    }
+  }
+
   // MEMBROS
   static getMembros(): Membro[] {
+    this.ensureLatestData();
     const data = localStorage.getItem('louvor_membros');
     if (!data) {
-      localStorage.setItem('louvor_membros', JSON.stringify(INITIAL_MEMBROS));
-      return INITIAL_MEMBROS;
+      localStorage.setItem('louvor_membros', JSON.stringify(OFICIAL_MEMBROS));
+      return OFICIAL_MEMBROS;
     }
     return JSON.parse(data);
   }
 
   static addMembro(nome: string, funcao: string): Membro {
     const membros = this.getMembros();
-    const novo: Membro = { id: String(Date.now()), nome: nome.trim(), funcao: funcao.trim(), ativo: true };
+    const novo: Membro = { id: `m_${Date.now()}`, nome: nome.trim(), funcao: funcao.trim(), ativo: true };
     membros.push(novo);
     localStorage.setItem('louvor_membros', JSON.stringify(membros));
     return novo;
@@ -101,22 +56,28 @@ export class DataStore {
 
   // MENSALIDADES
   static getMensalidades(mes: number, ano: number = 2026): Record<string, Mensalidade> {
+    this.ensureLatestData();
     const key = `louvor_mensalidades_${ano}_${mes}`;
     const data = localStorage.getItem(key);
     if (!data) {
-      // Seed inicial para o mês atual
       const membros = this.getMembros();
       const initial: Record<string, Mensalidade> = {};
-      membros.forEach((m, idx) => {
+
+      membros.forEach(m => {
+        const mesesPagos = OFICIAL_PAGAMENTOS_MATRIZ[m.nome] || [];
+        const isPago = mesesPagos.includes(mes);
+
         initial[m.id] = {
           id: `mens_${m.id}_${mes}`,
           membro_id: m.id,
           mes,
           ano,
-          status: idx < 2 ? 'Pago' : (idx === 2 ? 'Isento' : 'Pendente'),
+          status: isPago ? 'Pago' : 'Pendente',
           valor: 10.00,
+          data_pagamento: isPago ? '2026-09-01' : undefined,
         };
       });
+
       localStorage.setItem(key, JSON.stringify(initial));
       return initial;
     }
@@ -137,38 +98,78 @@ export class DataStore {
     localStorage.setItem(`louvor_mensalidades_${ano}_${mes}`, JSON.stringify(mensalidades));
   }
 
-  // TRANSAÇÕES
+  // TRANSAÇÕES & DESPESAS CONSOLIDADAS
   static getTransacoes(mes: number, ano: number = 2026): Transacao[] {
-    const data = localStorage.getItem('louvor_transacoes');
-    const all: Transacao[] = data ? JSON.parse(data) : INITIAL_TRANSACOES;
+    this.ensureLatestData();
+    const key = `louvor_transacoes_${ano}_${mes}`;
+    const data = localStorage.getItem(key);
+
     if (!data) {
-      localStorage.setItem('louvor_transacoes', JSON.stringify(INITIAL_TRANSACOES));
+      const oficial = OFICIAL_HISTORICO_MESES[mes];
+      const lista: Transacao[] = [];
+
+      if (oficial) {
+        // Oferta ou outros do mês
+        if (oficial.ofertaOutros > 0) {
+          lista.push({
+            id: `of_${mes}`,
+            tipo: 'OFERTA',
+            descricao: mes === 1 ? 'Oferta / Juros Conta Janeiro' : 
+                       mes === 3 ? 'Oferta Everton Bruno / Saldo' : 
+                       mes === 4 ? 'Oferta / Entradas Abril' : 'Oferta / Adiantamento / Juros',
+            valor: oficial.ofertaOutros,
+            mes,
+            ano,
+          });
+        }
+
+        // Despesas do mês
+        oficial.despesasDetalhadas.forEach((d, idx) => {
+          lista.push({
+            id: `desp_${mes}_${idx}`,
+            tipo: 'DESPESA',
+            descricao: d.descricao,
+            valor: d.valor,
+            mes,
+            ano,
+          });
+        });
+      }
+
+      localStorage.setItem(key, JSON.stringify(lista));
+      return lista;
     }
-    return all.filter(t => t.mes === mes && t.ano === ano);
+
+    return JSON.parse(data);
   }
 
   static addTransacao(t: Omit<Transacao, 'id'>): Transacao {
-    const data = localStorage.getItem('louvor_transacoes');
-    const all: Transacao[] = data ? JSON.parse(data) : INITIAL_TRANSACOES;
+    const key = `louvor_transacoes_${t.ano}_${t.mes}`;
+    const transacoes = this.getTransacoes(t.mes, t.ano);
     const nova: Transacao = { ...t, id: `t_${Date.now()}` };
-    all.push(nova);
-    localStorage.setItem('louvor_transacoes', JSON.stringify(all));
+    transacoes.push(nova);
+    localStorage.setItem(key, JSON.stringify(transacoes));
     return nova;
   }
 
-  static deleteTransacao(id: string) {
-    const data = localStorage.getItem('louvor_transacoes');
-    if (!data) return;
-    const all: Transacao[] = JSON.parse(data);
-    localStorage.setItem('louvor_transacoes', JSON.stringify(all.filter(t => t.id !== id)));
+  static deleteTransacao(id: string, mes: number, ano: number = 2026) {
+    const key = `louvor_transacoes_${ano}_${mes}`;
+    const transacoes = this.getTransacoes(mes, ano).filter(t => t.id !== id);
+    localStorage.setItem(key, JSON.stringify(transacoes));
+  }
+
+  // Retorna os dados oficiais do consolidado da planilha para aquele mês
+  static getHistoricoConsolidado(mes: number) {
+    return OFICIAL_HISTORICO_MESES[mes] || null;
   }
 
   // EVENTOS / AGENDA
   static getEventos(mes?: number): EventoAgenda[] {
+    this.ensureLatestData();
     const data = localStorage.getItem('louvor_eventos');
-    const all: EventoAgenda[] = data ? JSON.parse(data) : INITIAL_EVENTOS;
+    const all: EventoAgenda[] = data ? JSON.parse(data) : OFICIAL_EVENTOS;
     if (!data) {
-      localStorage.setItem('louvor_eventos', JSON.stringify(INITIAL_EVENTOS));
+      localStorage.setItem('louvor_eventos', JSON.stringify(OFICIAL_EVENTOS));
     }
     if (mes) {
       return all.filter(e => e.mes === mes);
@@ -225,9 +226,23 @@ export class DataStore {
 
   // FREQUÊNCIA
   static getFrequencia(dataStr: string, escaladosStr?: string): ItemFrequencia[] {
+    this.ensureLatestData();
     const key = `louvor_freq_${dataStr.replace(/\//g, '_')}`;
     const saved = localStorage.getItem(key);
-    const savedMap: Record<string, 'Presente' | 'Falta' | 'Pendente'> = saved ? JSON.parse(saved) : {};
+
+    // Se não tiver registro salvo, verifica se temos dados históricos do PDF (ex: 04/08/2026, 01/09/2026, 07/07/2026)
+    let savedMap: Record<string, 'Presente' | 'Falta' | 'Pendente'> = saved ? JSON.parse(saved) : {};
+    
+    if (!saved && OFICIAL_FREQUENCIAS_MATRIZ[dataStr]) {
+      const matriz = OFICIAL_FREQUENCIAS_MATRIZ[dataStr];
+      const membros = this.getMembros();
+      membros.forEach(m => {
+        if (matriz[m.nome]) {
+          savedMap[m.id] = matriz[m.nome];
+        }
+      });
+      localStorage.setItem(key, JSON.stringify(savedMap));
+    }
 
     const membros = this.getMembros();
     const isRestricted = Boolean(escaladosStr && escaladosStr.trim().length > 0);
@@ -256,10 +271,11 @@ export class DataStore {
 
   // CONFRATERNIZAÇÃO
   static getConfra(): ParticipanteConfra[] {
+    this.ensureLatestData();
     const data = localStorage.getItem('louvor_confra');
     if (!data) {
-      localStorage.setItem('louvor_confra', JSON.stringify(INITIAL_CONFRA));
-      return INITIAL_CONFRA;
+      localStorage.setItem('louvor_confra', JSON.stringify(OFICIAL_CONFRA));
+      return OFICIAL_CONFRA;
     }
     return JSON.parse(data);
   }
