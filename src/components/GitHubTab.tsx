@@ -182,17 +182,47 @@ export const GitHubTab: React.FC = () => {
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
                 <Server className="w-4 h-4 text-amber-400" />
-                Configuração DNS Cloudflare (Tabela de Registros)
+                Seus 2 Repositórios Git & DNS no Cloudflare
               </h3>
-              <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[11px] font-semibold border border-amber-500/30">
-                Ação no Painel
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-semibold border border-emerald-500/30">
+                2 Repos Criados
               </span>
             </div>
 
             <div className="space-y-3 text-xs text-zinc-400">
-              <p className="text-zinc-300">
-                Para ter a <strong>Página Principal da Igreja</strong> em <code className="text-purple-400 font-bold">novaliancaesperancajp.com.br</code> e o <strong>Portal do Louvor</strong> em <code className="text-emerald-400 font-bold">louvor.novaliancaesperancajp.com.br</code>, configure seus registros DNS assim:
-              </p>
+              <div className="space-y-2">
+                <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <strong className="text-white font-mono">1. Site Principal da Igreja</strong>
+                    <span className="text-purple-400 font-bold">novaliancaesperancajp.com.br</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400">Repositório Git independente:</p>
+                  <a 
+                    href="https://github.com/narjan01/igreja-nova-alianca-esperanca" 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="text-xs text-purple-400 hover:underline font-mono block break-all"
+                  >
+                    github.com/narjan01/igreja-nova-alianca-esperanca
+                  </a>
+                </div>
+
+                <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <strong className="text-white font-mono">2. Portal do Ministério de Louvor</strong>
+                    <span className="text-emerald-400 font-bold">louvor.novaliancaesperancajp.com.br</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400">Repositório Git atual:</p>
+                  <a 
+                    href="https://github.com/narjan01/ministerio-louvor-financeiro" 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="text-xs text-emerald-400 hover:underline font-mono block break-all"
+                  >
+                    github.com/narjan01/ministerio-louvor-financeiro
+                  </a>
+                </div>
+              </div>
 
               <div className="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-950 p-2 font-mono text-[11px]">
                 <table className="w-full text-left">
@@ -200,7 +230,7 @@ export const GitHubTab: React.FC = () => {
                     <tr className="border-b border-zinc-800 text-zinc-400">
                       <th className="p-2">Tipo</th>
                       <th className="p-2">Nome</th>
-                      <th className="p-2">Destino / Conteúdo</th>
+                      <th className="p-2">Destino (Projeto Pages)</th>
                       <th className="p-2">Proxy</th>
                     </tr>
                   </thead>
@@ -208,27 +238,23 @@ export const GitHubTab: React.FC = () => {
                     <tr>
                       <td className="p-2 text-amber-400 font-bold">CNAME</td>
                       <td className="p-2 font-bold text-white">@</td>
-                      <td className="p-2 text-purple-300">&lt;seu-projeto&gt;.pages.dev</td>
-                      <td className="p-2 text-amber-500">Laranja (Ativo)</td>
+                      <td className="p-2 text-purple-300">&lt;site-igreja&gt;.pages.dev</td>
+                      <td className="p-2 text-amber-500">Laranja</td>
                     </tr>
                     <tr>
                       <td className="p-2 text-amber-400 font-bold">CNAME</td>
                       <td className="p-2 font-bold text-white">www</td>
                       <td className="p-2 text-purple-300">novaliancaesperancajp.com.br</td>
-                      <td className="p-2 text-amber-500">Laranja (Ativo)</td>
+                      <td className="p-2 text-amber-500">Laranja</td>
                     </tr>
                     <tr>
                       <td className="p-2 text-emerald-400 font-bold">CNAME</td>
                       <td className="p-2 font-bold text-white">louvor</td>
-                      <td className="p-2 text-purple-300">&lt;seu-projeto&gt;.pages.dev</td>
-                      <td className="p-2 text-amber-500">Laranja (Ativo)</td>
+                      <td className="p-2 text-emerald-300">&lt;portal-louvor&gt;.pages.dev</td>
+                      <td className="p-2 text-amber-500">Laranja</td>
                     </tr>
                   </tbody>
                 </table>
-              </div>
-
-              <div className="p-3 rounded-xl bg-purple-950/20 border border-purple-500/20 text-purple-300 text-[11px] leading-relaxed">
-                💡 <strong>Dica Cloudflare Pages:</strong> No menu <em>Workers & Pages</em> &rarr; seu projeto &rarr; <em>Custom Domains</em>, cadastre tanto <code>novaliancaesperancajp.com.br</code> quanto <code>louvor.novaliancaesperancajp.com.br</code>. O sistema exibirá a página certa automaticamente para cada um!
               </div>
             </div>
           </div>
